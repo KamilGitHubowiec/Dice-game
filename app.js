@@ -1,34 +1,41 @@
-/*
-GAME RULES:
-- The game has 2 players, playing in rounds
-- In each turn, a player rolls a dice as many times as he whishes. Each result get added to his ROUND score
-- BUT, if the player rolls a 1, all his ROUND score gets lost. After that, it's the next player's turn
-- The player can choose to 'Hold', which means that his ROUND score gets added to his GLBAL score. After that, it's the next player's turn
-- The first player to reach 100 points on GLOBAL score wins the game
-*/
-
+"use strict"
 var scores, roundScore, activePlayer, gamePlaying;
 
 init();
 
+var lastDice;
+
+
 document.querySelector('.btn-roll').addEventListener('click', function() {
     if(gamePlaying) {
         // 1. Random number
-        var dice = Math.floor(Math.random() * 6) + 1;   
+        var dice = Math.floor(Math.random() * 6) + 1;
 
         // 2. Display result
         var diceDOM = document.querySelector('.dice'); 
         diceDOM.style.display = 'block';
-        diceDOM.src = 'dice-' + dice + '.png'; 
+        diceDOM.src = 'img/dice-' + dice + '.png'; 
 
         // 3. Update the round score IF the rolled number was NOT a 1
-        if (dice !== 1) {
+        if (dice === 6 && lastDice === 6) {
+            // Player loses score
+            scores[activePlayer] = 0;
+            document.querySelector('#score-' + activePlayer).textContent = scores[activePlayer];
+            nextPlayer();
+        } else if (dice !== 1) {
             // Add score 
             roundScore += dice;
-            document.querySelector('#current-' + activePlayer).textContent = roundScore;} 
-        else {
+            document.querySelector('#current-' + activePlayer).textContent = roundScore;
+        } else {
             // Next player
-            nextPlayer();}
+            nextPlayer();
+        }
+        
+        lastDice = dice;
+
+        // If dice was rolled, then disable input field so that players can not change the final score during the game
+        var input = document.querySelector('.final-score');
+        if (lastDice > 0) return input.disabled = true;
 }});
 
 document.querySelector('.btn-hold').addEventListener('click', function() {
@@ -39,8 +46,21 @@ document.querySelector('.btn-hold').addEventListener('click', function() {
         // Update the UI
         document.querySelector('#score-' + activePlayer).textContent = scores[activePlayer];
 
+        var inputValue = document.querySelector('.final-score').value;
+        var winningScore;
+
+        // Undefined, 0, null or "" are COERCED to false
+        // Anyhing else i coerced to true
+        
+        if(inputValue) {
+            winningScore = inputValue;
+        } else {
+            winningScore = 100;
+        }
+
+
         // Check if player won game
-        if (scores[activePlayer] >= 100) {
+        if (scores[activePlayer] >= winningScore) {
             document.querySelector('#name-' + activePlayer).textContent = 'Winner!';
             document.querySelector('.dice').style.display = 'none';
             document.querySelector('.player-' + activePlayer + '-panel').classList.add('winner');
@@ -50,7 +70,11 @@ document.querySelector('.btn-hold').addEventListener('click', function() {
             // Next player
             nextPlayer();
 }}});
-
+/* Change score function - my way of doing it
+document.querySelector('.btn-score').addEventListener('click', function() {
+    winScore = document.querySelector('#win-score').value;
+});
+*/
 
 function nextPlayer() {
         // Next player
@@ -69,13 +93,17 @@ function nextPlayer() {
         document.querySelector('.dice').style.display = 'none';
 }
 
+
 document.querySelector('.btn-new').addEventListener('click', init);
 
 function init () {
     scores = [0, 0];
     roundScore = 0;
+    lastDice = 0;
     activePlayer = 0;
     gamePlaying = true;
+
+    document.querySelector('.final-score').disabled = false;
 
     document.querySelector('.dice').style.display = 'none';
 
@@ -97,10 +125,6 @@ function init () {
 // var x = document.querySelector('#score-0').textContent;
 
 
-/*
-1. A player looses his ENTIRE score when he rolls two 6 in a row. After that, it's the next 
-player's turn. (Hint: Always save the previous dice roll in a seperate variable)
-*/
 
 
 
